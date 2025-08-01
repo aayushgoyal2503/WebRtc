@@ -13,6 +13,7 @@ let localStream;
 let caller = [];
 
 // Single Method for peer connection
+// Single Method for peer connection
 const PeerConnection = (function(){
     let peerConnection;
 
@@ -27,9 +28,12 @@ const PeerConnection = (function(){
         peerConnection = new RTCPeerConnection(config);
 
         // add local stream to peer connection
-        localStream.getTracks().forEach(track => {
-            peerConnection.addTrack(track, localStream);
-        })
+        if (localStream) {
+            localStream.getTracks().forEach(track => {
+                peerConnection.addTrack(track, localStream);
+            });
+        }
+        
         // listen to remote stream and add to peer connection
         peerConnection.ontrack = function(event) {
             remoteVideo.srcObject = event.streams[0];
@@ -44,13 +48,23 @@ const PeerConnection = (function(){
         return peerConnection;
     }
 
+    // New resetInstance method
+    const resetInstance = () => {
+        if (peerConnection) {
+            peerConnection.close();
+        }
+        peerConnection = null;
+    }
+
     return {
         getInstance: () => {
             if(!peerConnection){
                 peerConnection = createPeerConnection();
             }
             return peerConnection;
-        }
+        },
+        // Expose the new method
+        resetInstance: resetInstance
     }
 })();
 
@@ -167,11 +181,10 @@ const startCall = async (user) => {
 };
 
 const endCall = () => {
-    const pc = PeerConnection.getInstance();
-    if(pc) {
-        pc.close();
-        endCallBtn.style.display = 'none';
-    }
+    remoteVideo.srcObject = null; // Clear the remote video stream
+    PeerConnection.resetInstance(); // Close the connection and reset the instance
+    endCallBtn.style.display = 'none';
+    caller = []; // Clear the previous caller information
 }
 
 // initialize app
