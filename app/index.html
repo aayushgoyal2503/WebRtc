@@ -24,14 +24,25 @@
             <div class="username-input">
                 <input id="username" type="text" placeholder="Enter Username"><button id="create-user">Create</button>
             </div>
+            
+            
+            <div id="incoming-call" class="incoming-call-notice d-none">
+    <p>Incoming Call From <span id="caller-name"></span></p>
+    <button id="accept-call" class="call-btn">Accept</button>
+    <button id="decline-call" class="call-btn">Decline</button>
+</div>
+
+
+
+
             <div class="video-streams">
                 
                 <div class="local-video">
                     <video id="localVideo" autoplay muted playsinline></video>
                 </div>
                 <div class="remote-video">
-                    <video id="remoteVideo" autoplay muted playsinline></video>
-                </div>
+    <video id="remoteVideo" autoplay playsinline></video>
+</div>
             </div>
             <div>
                 <button id="end-call-btn" class="call call-disconnect d-none">

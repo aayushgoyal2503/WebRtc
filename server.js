@@ -58,6 +58,17 @@ io.on("connection", (socket) => {
         //broadcast to other peers
         socket.broadcast.emit("icecandidate", candidate);
     }); 
+
+    // Add these two new event handlers
+
+socket.on("call-accepted", ({ from, to }) => {
+    io.to(allusers[from].id).emit("call-accepted", { from, to });
+});
+
+socket.on("call-declined", ({ from, to }) => {
+    io.to(allusers[from].id).emit("call-declined", { from, to });
+});
+
 })
 
 server.listen(9000, () => {

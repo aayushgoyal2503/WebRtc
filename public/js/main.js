@@ -4,6 +4,10 @@ const allusersHtml = document.getElementById("allusers");
 const localVideo = document.getElementById("localVideo");
 const remoteVideo = document.getElementById("remoteVideo");
 const endCallBtn = document.getElementById("end-call-btn");
+const incomingCallDiv = document.getElementById("incoming-call");
+const callerNameSpan = document.getElementById("caller-name");
+const acceptCallBtn = document.getElementById("accept-call");
+const declineCallBtn = document.getElementById("decline-call");
 const socket = io();
 let localStream;
 let caller = [];
@@ -94,14 +98,41 @@ socket.on("joined", allusers => {
     createUsersHtml();
 
 })
-socket.on("offer", async ({from, to, offer}) => {
-    const pc = PeerConnection.getInstance();
-    // set remote description
-    await pc.setRemoteDescription(offer);
-    const answer = await pc.createAnswer();
-    await pc.setLocalDescription(answer);
-    socket.emit("answer", {from, to, answer: pc.localDescription});
-    caller = [from, to];
+socket.on("offer", async ({ from, to, offer }) => {
+    // Show incoming call notification
+    callerNameSpan.textContent = from;
+    incomingCallDiv.classList.remove("d-none");
+
+    // Handle Decline
+    declineCallBtn.onclick = () => {
+        socket.emit("call-declined", { from, to });
+        incomingCallDiv.classList.add("d-none");
+    };
+
+    socket.on("call-accepted", ({ from, to }) => {
+    console.log("Call accepted!");
+    // You can also show an alert or update the UI
+});
+
+socket.on("call-declined", ({ from, to }) => {
+    alert(`${to} declined the call.`);
+    // Reset any UI state if necessary
+    endCall(); 
+});
+
+    // Handle Accept
+    acceptCallBtn.onclick = async () => {
+        incomingCallDiv.classList.add("d-none");
+        
+        const pc = PeerConnection.getInstance();
+        await pc.setRemoteDescription(offer);
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+
+        socket.emit("answer", { from, to, answer: pc.localDescription });
+        socket.emit("call-accepted", { from, to }); // Inform the caller
+        caller = [from, to];
+    };
 });
 socket.on("answer", async ({from, to, answer}) => {
     const pc = PeerConnection.getInstance();
@@ -126,13 +157,14 @@ socket.on("call-ended", (caller) => {
 
 // start call method
 const startCall = async (user) => {
-    console.log({ user })
+    console.log({ user });
+    alert(`Calling ${user}...`); // Add this line
     const pc = PeerConnection.getInstance();
     const offer = await pc.createOffer();
-    console.log({ offer })
+    console.log({ offer });
     await pc.setLocalDescription(offer);
-    socket.emit("offer", {from: username.value, to: user, offer: pc.localDescription});
-}
+    socket.emit("offer", { from: username.value, to: user, offer: pc.localDescription });
+};
 
 const endCall = () => {
     const pc = PeerConnection.getInstance();
